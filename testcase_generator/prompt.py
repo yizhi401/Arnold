@@ -48,7 +48,7 @@ Assistant can ask the user to use tools to look up information that may be helpf
 
 CODE UNDER TEST
 --------------------
-Here is the code you need to generate testcases for. You should use [{{libraries}}] libraries for in these testcases.
+Here is the code you need to generate testcases for. Read the code below, ask questions about the code details. You should always ask yourself if there any thing you need to know before you generate the final testcases. You should use [{{libraries}}] libraries for in these testcases.
 
 {{{{input}}}}
 

@@ -18,6 +18,7 @@ from langchain.agents.agent import AgentExecutor
 import tsprompt
 import testdata
 from testcase_generator.base import TestCaseGenerator
+from mrkl_utgen.base import MRKLUTGenAgent
 
 from langchain.memory import ConversationBufferMemory
 
@@ -25,6 +26,7 @@ from langchain.agents import load_tools
 from langchain.agents import initialize_agent
 from langchain.agents import AgentType
 from langchain.llms import OpenAI
+from langchain.tools import Tool
 
 
 def initialise():
@@ -113,6 +115,13 @@ def build_vectorstore_retriever():
         model, retriever=retriever, verbose=True)
 
 
+def code_search(input: str):
+    return """
+def miracle(x, y):
+    return 2*x + y
+"""
+
+
 def build_testcase_chain():
     # prompt = PromptTemplate(
     #     template_format="jinja2",
@@ -125,8 +134,14 @@ def build_testcase_chain():
     #     prompt=prompt,
     #     llm=llm,
     # )
-    tools = load_tools(["llm-math"], llm=llm)
-    # tools = []
+    # tools = load_tools(["llm-math"], llm=llm)
+    tools = [
+        Tool.from_function(
+            name="CodeSearch",
+            func=code_search,
+            description="Search a function or variable definition in codebase.",
+        )
+    ]
     agent_cls = TestCaseGenerator
     agent_obj = agent_cls.from_llm_and_tools(
         llm,
@@ -148,14 +163,36 @@ def build_testcase_chain():
     return agent
 
 
+def buildup_mrklchain():
+    tools = [
+        Tool.from_function(
+            name="CodeSearch",
+            func=code_search,
+            description="Search a function or variable definition in codebase.",
+        )
+    ]
+    llm = ChatOpenAI(model_name='gpt-3.5-turbo')
+    agent_cls = MRKLUTGenAgent
+    agent_obj = agent_cls.from_llm_and_tools(
+        llm,
+        tools,
+    )
+    agent = AgentExecutor.from_agent_and_tools(
+        agent=agent_obj,
+        tools=tools)
+    return agent
+
+
 def buildup_langchain():
     # vschain = build_vectorstore_retriever()
     # testchain = build_testcase_chain()
     # print(testchain.run(**testdata.TEST_DATA))
-    print(build_testcase_chain().run(input="""
+    # chain =build_testcase_chain()
+    chain = buildup_mrklchain()
+    print(chain.run(input="""
 ```python
 def add(x, y):
-    return x + y
+    return miracle(x, y)
 ```
 """))
 
